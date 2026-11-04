@@ -3,147 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FRX LUA - Dashboard</title>
+    <title>FRX LUA - Ultimate AI & Security Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background-color: #0b0b0b;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        .container {
-            width: 90%;
-            max-width: 800px;
-            background: rgba(20, 20, 20, 0.85);
-            border: 1px solid #333;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            text-align: center;
-        }
-        .media-box {
-            width: 100%;
-            max-height: 350px;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            border: 1px solid #444;
-        }
-        .media-box video {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-        h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            color: #fff;
-            letter-spacing: 1px;
-        }
-        p.subtitle {
-            color: #aaa;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .stat-card {
-            background: #161616;
-            border: 1px solid #262626;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        .stat-card h3 {
-            font-size: 24px;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-        .stat-card span {
-            color: #888;
-            font-size: 13px;
-        }
-        .script-box {
-            background: #111;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px dashed #444;
-            text-align: left;
-            direction: ltr;
-            font-family: monospace;
-            font-size: 13px;
-            color: #00ffcc;
-            user-select: all;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #050505; color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .dashboard { width: 100%; max-width: 950px; background: rgba(15, 15, 15, 0.95); border: 1px solid #222; border-radius: 16px; padding: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 20px; margin-bottom: 25px; }
+        .header h1 { font-size: 24px; color: #fff; letter-spacing: 1px; }
+        .header span { color: #00ffcc; font-size: 13px; background: rgba(0,255,204,0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(0,255,204,0.3); }
+
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-box { background: #111; border: 1px solid #222; padding: 20px; border-radius: 12px; text-align: center; }
+        .stat-box h2 { font-size: 28px; color: #fff; margin-bottom: 5px; }
+        .stat-box p { color: #777; font-size: 13px; }
+
+        .panel-section { background: #111; border: 1px solid #222; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .panel-section h3 { font-size: 16px; margin-bottom: 15px; color: #00ffcc; }
+        
+        .form-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        input, select, textarea { flex: 1; min-width: 200px; background: #0a0a0a; border: 1px solid #333; padding: 12px; border-radius: 8px; color: #fff; outline: none; }
+        textarea { width: 100%; height: 100px; resize: vertical; font-family: monospace; font-size: 13px; }
+        input:focus, select:focus, textarea:focus { border-color: #00ffcc; }
+        button { background: #00ffcc; color: #000; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #00b38a; }
+
+        .keys-table { width: 100%; border-collapse: collapse; background: #0a0a0a; border-radius: 8px; overflow: hidden; border: 1px solid #222; }
+        .keys-table th, .keys-table td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #1a1a1a; font-size: 14px; }
+        .keys-table th { background: #141414; color: #888; font-weight: 600; }
+        .badge { background: rgba(0,255,204,0.15); color: #00ffcc; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
+        
+        .output-box { background: #080808; border: 1px dashed #333; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; color: #00ffcc; word-break: break-all; margin-top: 10px; max-height: 150px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- قسم الفيديو والصوت المتحرك -->
-        <div class="media-box">
-            <video autoplay loop muted playsinline>
-                <!-- ضع رابط الفيديو المتحرك المباشر هنا أو استخدم رابط الفيديو المرفق -->
-                <source src="https://assets.mixkit.co/videos/preview/mixkit-anime-girl-with-a-sword-41908-large.mp4" type="video/mp4">
-                متصفحك لا يدعم تشغيل الفيديو.
-            </video>
+    <div class="dashboard">
+        <div class="header">
+            <h1>FRX LUA - AI & SECURITY CONTROL</h1>
+            <span>SYSTEM ACTIVE</span>
         </div>
 
-        <h1>FRX LUA DASHBOARD</h1>
-        <p class="subtitle">لوحة حماية وإدارة السكربتات المتقدمة</p>
-
-        <!-- الإحصائيات الحقيقية القادمة من السيرفر -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3 id="activeKeys">--</h3>
-                <span>المفاتيح النشطة</span>
+        <!-- الإحصائيات -->
+        <div class="stats-container">
+            <div class="stat-box">
+                <h2 id="activeKeysCount">0</h2>
+                <p>المفاتيح النشطة</p>
             </div>
-            <div class="stat-card">
-                <h3 id="bannedUsers">--</h3>
-                <span>المستخدمين المحظورين</span>
+            <div class="stat-box">
+                <h2 id="bannedCount">0</h2>
+                <p>المستخدمين المحظورين</p>
             </div>
-            <div class="stat-card">
-                <h3 id="totalReq">--</h3>
-                <span>إجمالي الطلبات</span>
+            <div class="stat-box">
+                <h2 id="totalReqCount">0</h2>
+                <p>إجمالي الطلبات</p>
             </div>
         </div>
 
-        <!-- السكربت الجاهز للاستخدام -->
-        <div class="script-box">
-            _G.Key = "FRX-1QR9SA-HTQ7FE"<br>
-            loadstring(game:HttpGet("https://lost-fire-lua.onrender.com/api/verify?key=" .. _G.Key))()
+        <!-- نظام تشفير السكربتات Obfuscator -->
+        <div class="panel-section">
+            <h3>🔒 نظام تشفير السكربتات (Lua Obfuscator)</h3>
+            <textarea id="rawScript" placeholder="ضع كود Lua العادي هنا لتشفيره وحمايته..."></textarea>
+            <button onclick="obfuscateScript()">تشفير الكود الآن</button>
+            <div id="obfuscatedOutput" class="output-box" style="display:none;"></div>
+        </div>
+
+        <!-- نظام الذكاء الاصطناعي AI Helper -->
+        <div class="panel-section">
+            <h3>🤖 مساعد الذكاء الاصطناعي (AI Assistant)</h3>
+            <div class="form-group">
+                <input type="text" id="aiPrompt" placeholder="اطلب من الذكاء الاصطناعي كتابة كود أو إنشاء مفتاح باسم خاص...">
+                <button onclick="askAI()">توليد عبر الذكاء الاصطناعي</button>
+            </div>
+            <div id="aiOutput" class="output-box" style="display:none;"></div>
+        </div>
+
+        <!-- قسم توليد مفتاح جديد -->
+        <div class="panel-section">
+            <h3>🔑 إدارة وتوليد المفاتيح</h3>
+            <div class="form-group">
+                <input type="text" id="customKey" placeholder="اكتب المفتاح أو اتركه فارغاً للتوليد">
+                <select id="keyDuration">
+                    <option value="Lifetime">دائم (Lifetime)</option>
+                    <option value="24 Hours">24 ساعة</option>
+                    <option value="7 Days">7 أيام</option>
+                </select>
+                <button onclick="generateKey()">توليد وإضافة</button>
+            </div>
+        </div>
+
+        <!-- قائمة المفاتيح الفعالة -->
+        <div class="panel-section">
+            <h3>المفاتيح النشطة في السيرفر</h3>
+            <table class="keys-table">
+                <thead>
+                    <tr>
+                        <th>المفتاح</th>
+                        <th>المدة</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody id="keysTableBody"></tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        // دالة لجلب الإحصائيات الحقيقية من السيرفر وتحديثها تلقائياً
-        async function fetchStats() {
+        async function fetchDashboardData() {
             try {
-                const response = await fetch('/api/stats');
-                const data = await response.json();
-                document.getElementById('activeKeys').innerText = data.activeKeysCount;
-                document.getElementById('bannedUsers').innerText = data.bannedCount;
-                document.getElementById('totalReq').innerText = data.totalRequests;
-            } catch (e) {
-                console.error("خطأ في جلب البيانات", e);
-            }
-        }
-        
-        fetchStats();
-        setInterval(fetchStats, 5000); // تحديث كل 5 ثواني
-    </script>
+                const res = await fetch('/api/keys-list');
+                const data = await res.json();
+                
+                document.getElementById('activeKeysCount').innerText = data.activeKeys;
+                document.getElementById('bannedCount').innerText = data.bannedCount;
+                document.getElementById('totalReqCount').innerText = data.totalRequests;
 
+                const tbody = document.getElementById('keysTableBody');
+                tbody.innerHTML = '';
+                data.keys.forEach(k => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><code>${k.key}</code></td>
+                            <td>${k.duration}</td>
+                            <td><span class="badge">نشط</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function obfuscateScript() {
+            const script = document.getElementById('rawScript').value;
+            if(!script) return alert("الرجاء كتابة كود لتشفيره");
+
+            const res = await fetch('/api/obfuscate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ script })
+            });
+            const data = await res.json();
+            const out = document.getElementById('obfuscatedOutput');
+            out.style.display = 'block';
+            out.innerText = data.obfuscatedScript;
+        }
+
+        async function askAI() {
+            const prompt = document.getElementById('aiPrompt').value;
+            if(!prompt) return alert("اكتب طلبك للذكاء الاصطناعي");
+
+            const res = await fetch('/api/ai-generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+            const data = await res.json();
+            const out = document.getElementById('aiOutput');
+            out.style.display = 'block';
+            out.innerText = data.response;
+        }
+
+        async function generateKey() {
+            let keyInput = document.getElementById('customKey').value.trim();
+            if(!keyInput) {
+                keyInput = "FRX-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+            }
+            const duration = document.getElementById('keyDuration').value;
+
+            await fetch('/api/add-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: keyInput, duration: duration })
+            });
+
+            document.getElementById('customKey').value = '';
+            fetchDashboardData();
+        }
+
+        fetchDashboardData();
+        setInterval(fetchDashboardData, 4000);
+    </script>
 </body>
 </html>
