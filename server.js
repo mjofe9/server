@@ -12,13 +12,11 @@ let keys = [
 ];
 let bannedUsers = [];
 
-// عرض لوحة التحكم الأصلية
 app.get('/', (req, res) => {
     totalRequests++;
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// إرسال البيانات الحقيقية للوحة التحكم (Stats & Keys)
 app.get('/api/stats', (req, res) => {
     res.json({
         totalRequests: totalRequests,
@@ -28,18 +26,16 @@ app.get('/api/stats', (req, res) => {
     });
 });
 
-// API إضافة وتوليد المفتاح (ربط شغال للزر)
 app.post('/api/add-key', (req, res) => {
     const { key, duration } = req.body;
     if (key) {
         keys.push({ key, duration: duration || "Lifetime", active: true });
-        res.json({ success: true, message: "تمت إضافة المفتاح بنجاح" });
+        res.json({ success: true });
     } else {
-        res.status(400).json({ success: false, message: "مفتاح غير صالح" });
+        res.status(400).json({ success: false });
     }
 });
 
-// API التحقق من المفتاح داخل اللعبة من روبلوكس (loadstring)
 app.get('/api/verify', (req, res) => {
     totalRequests++;
     const key = req.query.key;
@@ -63,7 +59,7 @@ app.get('/api/verify', (req, res) => {
                 Text = "المفتاح غير صالح أو منتهي!";
                 Duration = 5;
             });
-            error("Invalid or expired key!");
+            error("Invalid key!");
         `);
     }
 });
