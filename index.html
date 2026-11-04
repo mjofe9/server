@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRX LUA - Modern Script Security & Key System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            dark: '#0a0a0c',
+                            card: '#121217',
+                            border: '#262630',
+                            red: '#ff1e42',
+                            redGlow: 'rgba(255, 30, 66, 0.4)',
+                            darkRed: '#8b001a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Cairo', 'sans-serif'],
+                        mono: ['Fira Code', 'Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #08080a;
+            color: #e2e8f0;
+            font-family: 'Cairo', 'Inter', sans-serif;
+        }
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(255, 30, 66, 0.25);
+        }
+        .glow-text {
+            text-shadow: 0 0 10px rgba(255, 30, 66, 0.6);
+        }
+        .border-glow {
+            border-color: rgba(255, 30, 66, 0.5);
+            box-shadow: inset 0 0 10px rgba(255, 30, 66, 0.2);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0d12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff1e42;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row overflow-x-hidden">
+
+    <!-- Toast Notifications Area -->
+    <div id="toast-container" class="fixed top-5 left-5 z-50 flex flex-col gap-3"></div>
+
+    <!-- Mobile Header Navigation -->
+    <div class="md:hidden bg-cyber-card border-b border-cyber-border p-4 flex justify-between items-center z-40 sticky top-0">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-cyber-red rounded flex items-center justify-center font-bold text-black glow-effect">F</div>
+            <span class="font-black text-xl tracking-wider text-white">FRX <span class="text-cyber-red">LUA</span></span>
+        </div>
+        <button id="mobile-menu-btn" class="text-gray-300 hover:text-cyber-red text-2xl focus:outline-none">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="fixed inset-y-0 right-0 transform translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-cyber-card border-l border-cyber-border flex flex-col z-40 md:relative">
+        <!-- Logo Brand -->
+        <div class="p-6 border-b border-cyber-border flex items-center gap-3">
+            <div class="w-10 h-10 bg-cyber-red rounded-lg flex items-center justify-center font-black text-black text-xl glow-effect">
+                F
+            </div>
+            <div>
+                <h1 class="font-black text-xl tracking-wider text-white">FRX <span class="text-cyber-red glow-text">LUA</span></h1>
+                <p class="text-xs text-gray-500">Security & Key System v2.0</p>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 bg-cyber-red/10 text-cyber-red border-r-4 border-cyber-red" data-tab="dashboard">
+                <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                <span>الرئيسية (Dashboard)</span>
+            </button>
+            <button onclick="switchTab('add-script')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200" data-tab="add-script">
+                <i class="fa-solid fa-code-commit w-5 text-center"></i>
+                <span>إضافة سكربت (Add Script)</span>
+            </button>
+            <button onclick="switchTab('manage-scripts')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200" data-tab="manage-scripts">
+                <i class="fa-solid fa-layer-group w-5 text-center"></i>
+                <span>إدارة السكربتات (Manage)</span>
+            </button>
+            <button onclick="switchTab('get-key')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200" data-tab="get-key">
+                <i class="fa-solid fa-key w-5 text-center"></i>
+                <span>توليد المفاتيح (Get Key)</span>
+            </button>
+            <button onclick="switchTab('ai-assistant')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200" data-tab="ai-assistant">
+                <i class="fa-solid fa-robot w-5 text-center text-cyber-red"></i>
+                <span>مساعد AI Luau</span>
+            </button>
+            <button onclick="switchTab('bans')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200" data-tab="bans">
+                <i class="fa-solid fa-user-slash w-5 text-center"></i>
+                <span>نظام الحظر (Ban Control)</span>
+            </button>
+        </nav>
+
+        <!-- Status Box at Sidebar Bottom -->
+        <div class="p-4 border-t border-cyber-border">
+            <div class="bg-cyber-dark p-3 rounded-lg border border-cyber-border flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-xs font-semibold text-gray-300">السيرفر متصل</span>
+                </div>
+                <span class="text-[10px] bg-cyber-red/20 text-cyber-red px-2 py-0.5 rounded border border-cyber-red/30">Render API</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for Mobile Menu -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 hidden md:hidden"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+
+        <!-- Top Header Info Bar -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b border-cyber-border">
+            <div>
+                <h2 id="page-title" class="text-2xl font-black text-white flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-cyber-red"></i> الإحصائيات العامة
+                </h2>
+                <p class="text-xs text-gray-400 mt-1">إدارة حماية ومفاتيح السكربتات المربوطة بالسيرفر</p>
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <div class="bg-cyber-card border border-cyber-border px-3 py-1.5 rounded-lg flex items-center gap-2 text-xs">
+                    <i class="fa-solid fa-network-wired text-cyber-red"></i>
+                    <span class="text-gray-400">Render URL:</span>
+                    <span id="api-url-display" class="font-mono text-gray-200">live-api.render.com</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= TAB 1: DASHBOARD ================= -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <!-- Metrics Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Total Scripts -->
+                <div class="bg-cyber-card p-5 rounded-xl border border-cyber-border hover:border-cyber-red/50 transition-all duration-300 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold">إجمالي السكربتات</p>
+                            <h3 class="text-3xl font-black text-white mt-2 group-hover:text-cyber-red transition-colors" id="metric-scripts-count">3</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-cyber-red/10 border border-cyber-red/30 flex items-center justify-center text-cyber-red">
+                            <i class="fa-solid fa-scroll text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Keys -->
+                <div class="bg-cyber-card p-5 rounded-xl border border-cyber-border hover:border-cyber-red/50 transition-all duration-300 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold">المفاتيح النشطة</p>
+                            <h3 class="text-3xl font-black text-white mt-2 group-hover:text-cyber-red transition-colors" id="metric-keys-count">18</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                            <i class="fa-solid fa-key text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banned Users -->
+                <div class="bg-cyber-card p-5 rounded-xl border border-cyber-border hover:border-cyber-red/50 transition-all duration-300 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold">المستخدمين المحظورين</p>
+                            <h3 class="text-3xl font-black text-white mt-2 group-hover:text-cyber-red transition-colors" id="metric-bans-count">4</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-500">
+                            <i class="fa-solid fa-user-shield text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Executions -->
+                <div class="bg-cyber-card p-5 rounded-xl border border-cyber-border hover:border-cyber-red/50 transition-all duration-300 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold">مرات التشغيل اليوم</p>
+                            <h3 class="text-3xl font-black text-white mt-2 group-hover:text-cyber-red transition-colors">1,420</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                            <i class="fa-solid fa-bolt text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Banner & Recent Activity -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Welcome Banner -->
+                <div class="lg:col-span-2 bg-gradient-to-r from-cyber-card via-cyber-card to-cyber-dark p-6 rounded-xl border border-cyber-border relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -left-10 -bottom-10 w-48 h-48 bg-cyber-red/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="z-10 space-y-4">
+                        <span class="bg-cyber-red/20 text-cyber-red border border-cyber-red/40 px-3 py-1 rounded-full text-xs font-bold">FRX PROTECTION LIVE</span>
+                        <h3 class="text-2xl font-black text-white">نظام حماية وإدارة السكربتات المتقدم</h3>
+                        <p class="text-sm text-gray-400 leading-relaxed max-w-xl">
+                            يمكنك من هنا التحكم التام بسكربتات روبلوكس، حمايتها عبر التشفير الذاتي، إصدار مفاتيح مؤقتة أو دائمة للعملاء، وتتبع محاولات التشغيل والحظر التلقائي للـ HWID.
+                        </p>
+                    </div>
+                    <div class="mt-6 flex gap-3 z-10">
+                        <button onclick="switchTab('add-script')" class="bg-cyber-red hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg text-sm transition-all glow-effect flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> إضافة سكربت جديد
+                        </button>
+                        <button onclick="switchTab('get-key')" class="bg-cyber-dark hover:bg-cyber-border text-gray-200 border border-cyber-border font-bold px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-key"></i> توليد مفتاح جديد
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Feed -->
+                <div class="bg-cyber-card p-5 rounded-xl border border-cyber-border flex flex-col">
+                    <h4 class="font-bold text-white text-base mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-cyber-red"></i> آخر الأنشطة
+                    </h4>
+                    <div class="space-y-3 flex-1 overflow-y-auto max-h-[220px] text-xs">
+                        <div class="flex items-center justify-between p-2 rounded bg-cyber-dark border border-cyber-border/50">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                <span class="text-gray-300">تم تفعيل مفتاح جديد (7 أيام)</span>
+                            </div>
+                            <span class="text-gray-500 font-mono">منذ دقيقتين</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded bg-cyber-dark border border-cyber-border/50">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-cyber-red"></span>
+                                <span class="text-gray-300">محاولة دخول بمفتاح منتهي</span>
+                            </div>
+                            <span class="text-gray-500 font-mono">منذ 15 دقيقة</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded bg-cyber-dark border border-cyber-border/50">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                                <span class="text-gray-300">تم إضافة سكربت "BlockSpin GUI"</span>
+                            </div>
+                            <span class="text-gray-500 font-mono">منذ ساعة</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: ADD SCRIPT ================= -->
+        <section id="tab-add-script" class="tab-content hidden space-y-6">
+            <div class="bg-cyber-card p-6 rounded-xl border border-cyber-border max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-cyber-border">
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-file-circle-plus text-cyber-red"></i> رفع وحماية سكربت جديد
+                        </h3>
+                        <p class="text-xs text-gray-400">أدخل بيانات السكربت للربط بالنظام وتوليد رابط الـ Loadstring</p>
+                    </div>
+                </div>
+
+                <form id="add-script-form" class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-300 mb-2">اسم السكربت (Script Name)</label>
+                            <input type="text" id="script-name" placeholder="مثال: BlockSpin Hub v1.0" required class="w-full bg-cyber-dark border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-red transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-300 mb-2">الإصدار (Version)</label>
+                            <input type="text" id="script-version" value="v1.0.0" required class="w-full bg-cyber-dark border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-red transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-2">وصف السكربت (Description)</label>
+                        <input type="text" id="script-desc" placeholder="وصف قصير للسكربت والمميزات..." class="w-full bg-cyber-dark border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-red transition-all">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold text-gray-300">كود السكربت (Luau Code)</label>
+                            <span class="text-[10px] text-cyber-red font-mono">Luau Supported</span>
+                        </div>
+                        <textarea id="script-code" rows="8" placeholder="-- ضع كود روبلوكس هنا&#10;print('Hello from FRX LUA Hub!')" required class="w-full bg-cyber-dark border border-cyber-border rounded-lg p-4 font-mono text-sm text-emerald-400 focus:outline-none focus:border-cyber-red transition-all dir-ltr"></textarea>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="flex items-center justify-between p-4 bg-cyber-dark rounded-lg border border-cyber-border">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="obfuscate-check" class="w-4 h-4 accent-cyber-red rounded cursor-pointer">
+                            <div>
+                                <label for="obfuscate-check" class="text-xs font-bold text-white cursor-pointer">تفعيل التشفير والحماية تلقائياً (Obfuscate Code)</label>
+                                <p class="text-[11px] text-gray-400">يخفي الكود لمنع السرقة أو الفحص التلقائي</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-cyber-red bg-cyber-red/10 px-2.5 py-1 rounded border border-cyber-red/30">LURAPH OBFUSCATION</span>
+                    </div>
+
+                    <button type="submit" class="w-full bg-cyber-red hover:bg-red-600 text-white font-bold py-3 rounded-lg text-sm transition-all glow-effect flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> حفظ السكربت وإنشاء الرابط
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: MANAGE SCRIPTS ================= -->
+        <section id="tab-manage-scripts" class="tab-content hidden space-y-6">
+            <div class="bg-cyber-card p-6 rounded-xl border border-cyber-border">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-cyber-border">
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-cyber-red"></i> قائمة السكربتات المرفوعة
+                        </h3>
+                        <p class="text-xs text-gray-400">تحكم بالسكربتات، نسخ الـ Loadstrings، أو إيقاف التشغيل</p>
+                    </div>
+                </div>
+
+                <!-- Scripts Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs text-gray-300">
+                        <thead class="bg-cyber-dark text-gray-400 font-bold border-b border-cyber-border">
+                            <tr>
+                                <th class="p-3">اسم السكربت</th>
+                                <th class="p-3">الإصدار</th>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3">التشفير</th>
+                                <th class="p-3">تاريخ الإضافة</th>
+                                <th class="p-3 text-center">التحكم والروابط</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scripts-table-body" class="divide-y divide-cyber-border">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: GET KEY SYSTEM ================= -->
+        <section id="tab-get-key" class="tab-content hidden space-y-6">
+            <div class="bg-cyber-card p-6 rounded-xl border border-cyber-border max-w-3xl mx-auto">
+                <div class="mb-6 pb-4 border-b border-cyber-border">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-key text-cyber-red"></i> إصدار مفتاح جديد (Generate License Key)
+                    </h3>
+                    <p class="text-xs text-gray-400">حدد السكربت والمدة الزمنية لإصدار مفتاح للعملاء</p>
+                </div>
+
+                <form id="key-gen-form" class="space-y-6">
+                    <!-- Step 1: Select Script -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-2">1. اختر السكربت المطلوب</label>
+                        <select id="key-script-select" class="w-full bg-cyber-dark border border-cyber-border rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyber-red transition-all">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+
+                    <!-- Step 2: Duration Buttons -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-2">2. تحديد مدة الصلاحية (Duration)</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="duration-selector">
+                            <button type="button" onclick="selectDuration('1d', this)" class="duration-btn bg-cyber-red/20 border-2 border-cyber-red text-white py-3 rounded-lg text-sm font-bold flex flex-col items-center gap-1 transition-all">
+                                <span>يوم واحد</span>
+                                <span class="text-[10px] text-gray-400">1 Day</span>
+                            </button>
+                            <button type="button" onclick="selectDuration('7d', this)" class="duration-btn bg-cyber-dark border border-cyber-border text-gray-400 py-3 rounded-lg text-sm font-bold flex flex-col items-center gap-1 transition-all hover:border-gray-500">
+                                <span>7 أيام</span>
+                                <span class="text-[10px] text-gray-400">7 Days</span>
+                            </button>
+                            <button type="button" onclick="selectDuration('30d', this)" class="duration-btn bg-cyber-dark border border-cyber-border text-gray-400 py-3 rounded-lg text-sm font-bold flex flex-col items-center gap-1 transition-all hover:border-gray-500">
+                                <span>30 يوم</span>
+                                <span class="text-[10px] text-gray-400">30 Days</span>
+                            </button>
+                            <button type="button" onclick="selectDuration('lifetime', this)" class="duration-btn bg-cyber-dark border border-cyber-border text-gray-400 py-3 rounded-lg text-sm font-bold flex flex-col items-center gap-1 transition-all hover:border-gray-500">
+                                <span>مدى الحياة</span>
+                                <span class="text-[10px] text-cyber-red">Lifetime</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Max Activations & Note -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-300 mb-2">أقصى عدد أجهزة مسموح (Max Devices)</label>
+                            <input type="number" id="key-max-users" value="1" min="1" max="10" class="w-full bg-cyber-dark border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-red transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-300 mb-2">ملاحظة للعميل (اختياري)</label>
+                            <input type="text" id="key-note" placeholder="اسم العميل أو حساب الديسكورد" class="w-full bg-cyber-dark border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-red transition-all">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-cyber-red hover:bg-red-600 text-white font-bold py-3.5 rounded-lg text-sm transition-all glow-effect flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-key"></i> إنشاء المفتاح الآن
+                    </button>
+                </form>
+
+                <!-- Key Result Output Box -->
+                <div id="key-result-box" class="mt-6 hidden p-4 bg-cyber-dark border border-cyber-red/50 rounded-xl space-y-3">
+                    <div class="flex justify-between items-center text-xs font-bold text-white">
+                        <span class="text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> تم توليد المفتاح بنجاح!</span>
+                        <span id="generated-key-time" class="text-gray-400 font-mono"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="generated-key-input" readonly class="w-full bg-black/60 border border-cyber-border rounded px-3 py-2 font-mono text-xs text-cyber-red font-bold dir-ltr">
+                        <button onclick="copyToClipboard('generated-key-input')" class="bg-cyber-red text-white px-3 py-2 rounded text-xs font-bold hover:bg-red-600 transition-all flex items-center gap-1 shrink-0">
+                            <i class="fa-solid fa-copy"></i> نسخ
+                        </button>
+                    </div>
+
+                    <!-- Loader Roblox Script Box -->
+                    <div class="pt-2 border-t border-cyber-border">
+                        <p class="text-[11px] text-gray-400 mb-1">كود التشغيل المباشر للعبة (Loadstring with Key):</p>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="generated-loadstring-input" readonly class="w-full bg-black/60 border border-cyber-border rounded px-3 py-2 font-mono text-[11px] text-emerald-400 dir-ltr">
+                            <button onclick="copyToClipboard('generated-loadstring-input')" class="bg-cyber-border text-white px-3 py-2 rounded text-xs font-bold hover:bg-gray-700 transition-all flex items-center gap-1 shrink-0">
+                                <i class="fa-solid fa-copy"></i> نسخ الكود
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 5: AI LUAU ASSISTANT ================= -->
+        <section id="tab-ai-assistant" class="tab-content hidden space-y-6">
+            <div class="bg-cyber-card p-6 rounded-xl border border-cyber-border max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-cyber-border">
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-robot text-cyber-red"></i> مساعد AI Luau المتقدم
+                        </h3>
+                        <p class="text-xs text-gray-400">اكتب فكرة السكربت باللغة العربية أو الإنجليزية وسيقوم الذكاء الاصطناعي بكتابته فوراً</p>
+                    </div>
+                    <span class="bg-cyber-red/20 text-cyber-red border border-cyber-red/30 text-[11px] px-2.5 py-1 rounded font-mono">Gemini Luau Engine</span>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-2">وصف وظيفة السكربت المطلوبة</label>
+                        <div class="relative">
+                            <textarea id="ai-prompt-input" rows="3" placeholder="مثال: اكتب سكربت واجهة Rayfield فيها زر لزيادة سرعة اللاعب وخيار للقفز العالي..." class="w-full bg-cyber-dark border border-cyber-border rounded-lg p-3 text-sm text-white focus:outline-none focus:border-cyber-red transition-all"></textarea>
+                            <button onclick="generateAiScript()" id="ai-gen-btn" class="absolute left-3 bottom-3 bg-cyber-red hover:bg-red-600 text-white font-bold px-4 py-2 rounded text-xs transition-all flex items-center gap-2 glow-effect">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> توليد السكربت
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AI Generated Code Result -->
+                    <div id="ai-result-container" class="space-y-2">
+                        <div class="flex justify-between items-center text-xs text-gray-400">
+                            <span class="font-bold text-white flex items-center gap-1"><i class="fa-solid fa-code text-cyber-red"></i> الكود الناتج:</span>
+                            <div class="flex gap-2">
+                                <button onclick="sendAiCodeToAddScript()" class="bg-cyber-dark hover:bg-cyber-border text-gray-200 border border-cyber-border px-3 py-1 rounded text-xs transition-all flex items-center gap-1">
+                                    <i class="fa-solid fa-share-from-square text-cyber-red"></i> إرسال لصفحة الإضافة
+                                </button>
+                                <button onclick="copyToClipboard('ai-code-output')" class="bg-cyber-red hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-bold transition-all flex items-center gap-1">
+                                    <i class="fa-solid fa-copy"></i> نسخ الكود
+                                </button>
+                            </div>
+                        </div>
+                        <textarea id="ai-code-output" readonly rows="10" class="w-full bg-cyber-dark border border-cyber-border rounded-lg p-4 font-mono text-xs text-emerald-400 focus:outline-none dir-ltr">-- اضغط على "توليد السكربت" لبدء كتابة الكود بواسطة الذكاء الاصطناعي</textarea>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 6: BAN CONTROL ================= -->
+        <section id="tab-bans" class="tab-content hidden space-y-6">
+            <div class="bg-cyber-card p-6 rounded-xl border border-cyber-border max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-cyber-border">
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-user-slash text-cyber-red"></i> إدارة الحظر (HWID & User Ban)
+                        </h3>
+                        <p class="text-xs text-gray-400">حظر أي مستخدم من تشغيل السكربتات نهائياً</p>
+                    </div>
+                </div>
+
+                <!-- Add Ban Input -->
+                <form id="ban-form" class="flex flex-col sm:flex-row gap-3 mb-6">
+                    <input type="text" id="ban-target" placeholder="اسم المستخدم في روبلوكس أو HWID..." required class="flex-1 bg-cyber-dark border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-red">
+                    <input type="text" id="ban-reason" placeholder="سبب الحظر..." class="flex-1 bg-cyber-dark border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-red">
+                    <button type="submit" class="bg-cyber-red hover:bg-red-600 text-white font-bold px-6 py-2.5 rounded-lg text-sm transition-all glow-effect shrink-0">
+                        حظر الآن
+                    </button>
+                </form>
+
+                <!-- Banned List -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs text-gray-300">
+                        <thead class="bg-cyber-dark text-gray-400 font-bold border-b border-cyber-border">
+                            <tr>
+                                <th class="p-3">المستهدف / HWID</th>
+                                <th class="p-3">السبب</th>
+                                <th class="p-3">التاريخ</th>
+                                <th class="p-3 text-center">إلغاء الحظر</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ban-table-body" class="divide-y divide-cyber-border">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // State Management
+        let currentDuration = '1d';
+        let scripts = [
+            { id: 1, name: 'BlockSpin Hub', version: 'v1.0.0', obfuscated: true, code: 'print("BlockSpin Executed")', date: '2026-11-01' },
+            { id: 2, name: 'FRX Universal Aimbot', version: 'v2.1.0', obfuscated: true, code: 'print("Aimbation Active")', date: '2026-11-03' }
+        ];
+        let keys = [];
+        let bans = [
+            { target: 'RobloxUser_99', reason: 'محاولة فك التشفير', date: '2026-11-02' }
+        ];
+
+        const renderApiUrl = "https://server-x8s9.onrender.com"; // Render Backend Base
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            // Remove active style from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-cyber-red/10', 'text-cyber-red', 'border-r-4', 'border-cyber-red');
+                btn.classList.add('text-gray-400');
+            });
+
+            // Show selected tab
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if(targetTab) targetTab.classList.remove('hidden');
+
+            // Highlight Active Nav Button
+            const activeNav = document.querySelector(`[data-tab="${tabId}"]`);
+            if(activeNav) {
+                activeNav.classList.add('bg-cyber-red/10', 'text-cyber-red', 'border-r-4', 'border-cyber-red');
+                activeNav.classList.remove('text-gray-400');
+            }
+
+            // Close Mobile Sidebar
+            toggleMobileMenu(false);
+        }
+
+        // Mobile Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+
+        function toggleMobileMenu(open) {
+            if(open) {
+                sidebar.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        mobileMenuBtn.addEventListener('click', () => toggleMobileMenu(true));
+        overlay.addEventListener('click', () => toggleMobileMenu(false));
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-cyber-red';
+            
+            toast.className = `flex items-center gap-3 bg-cyber-dark border border-cyber-border p-3.5 rounded-lg text-xs font-bold text-white shadow-xl transform transition-all duration-300 translate-y-[-10px] opacity-0 dir-rtl`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-[-10px]', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Duration Selection for Key System
+        function selectDuration(dur, btn) {
+            currentDuration = dur;
+            document.querySelectorAll('.duration-btn').forEach(b => {
+                b.className = 'duration-btn bg-cyber-dark border border-cyber-border text-gray-400 py-3 rounded-lg text-sm font-bold flex flex-col items-center gap-1 transition-all hover:border-gray-500';
+            });
+            btn.className = 'duration-btn bg-cyber-red/20 border-2 border-cyber-red text-white py-3 rounded-lg text-sm font-bold flex flex-col items-center gap-1 transition-all';
+        }
+
+        // Render Scripts Table
+        function renderScriptsTable() {
+            const tbody = document.getElementById('scripts-table-body');
+            const select = document.getElementById('key-script-select');
+            
+            tbody.innerHTML = '';
+            select.innerHTML = '';
+
+            scripts.forEach((script) => {
+                // Add to table
+                const tr = document.createElement('tr');
+                const loadstring = `loadstring(game:HttpGet("${renderApiUrl}/api/verify?script=${encodeURIComponent(script.name)}"))()`;
+                
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-white">${script.name}</td>
+                    <td class="p-3 font-mono text-gray-400">${script.version}</td>
+                    <td class="p-3"><span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px]">نشط</span></td>
+                    <td class="p-3"><span class="bg-cyber-red/20 text-cyber-red border border-cyber-red/30 px-2 py-0.5 rounded text-[10px]">${script.obfuscated ? 'Luraph' : 'بدون'}</span></td>
+                    <td class="p-3 font-mono text-gray-500">${script.date}</td>
+                    <td class="p-3 flex justify-center gap-2">
+                        <button onclick="copyRaw('${loadstring}')" class="bg-cyber-dark hover:bg-cyber-border text-cyber-red border border-cyber-border px-2.5 py-1 rounded text-[11px] font-bold transition-all">
+                            <i class="fa-solid fa-copy"></i> Loadstring
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // Add to Select Dropdown
+                const opt = document.createElement('option');
+                opt.value = script.name;
+                opt.textContent = `${script.name} (${script.version})`;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('metric-scripts-count').textContent = scripts.length;
+        }
+
+        // Add Script Event
+        document.getElementById('add-script-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('script-name').value;
+            const version = document.getElementById('script-version').value;
+            const code = document.getElementById('script-code').value;
+            const obfuscated = document.getElementById('obfuscate-check').checked;
+
+            scripts.push({
+                id: Date.now(),
+                name,
+                version,
+                obfuscated,
+                code,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            renderScriptsTable();
+            showToast('تمت إضافة السكربت بنجاح وحفظه بالسيرفر!');
+            switchTab('manage-scripts');
+            e.target.reset();
+        });
+
+        // Key Generator Event
+        document.getElementById('key-gen-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const scriptName = document.getElementById('key-script-select').value;
+            const randomKey = 'FRX-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            
+            const loadstringCode = `_G.Key = "${randomKey}";\nloadstring(game:HttpGet("${renderApiUrl}/api/verify?key=${randomKey}"))()`;
+
+            document.getElementById('generated-key-input').value = randomKey;
+            document.getElementById('generated-loadstring-input').value = loadstringCode;
+            document.getElementById('generated-key-time').textContent = `المدة: ${currentDuration}`;
+            
+            document.getElementById('key-result-box').classList.remove('hidden');
+            showToast('تم إصدار مفتاح التفعيل بنجاح!');
+        });
+
+        // Ban System Render & Add
+        function renderBans() {
+            const tbody = document.getElementById('ban-table-body');
+            tbody.innerHTML = '';
+            bans.forEach((ban, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-cyber-red">${ban.target}</td>
+                    <td class="p-3 text-gray-300">${ban.reason}</td>
+                    <td class="p-3 font-mono text-gray-500">${ban.date}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="unban(${idx})" class="text-xs text-gray-400 hover:text-white bg-cyber-dark p-1.5 rounded border border-cyber-border">
+                            <i class="fa-solid fa-trash-can text-rose-500"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('metric-bans-count').textContent = bans.length;
+        }
+
+        document.getElementById('ban-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const target = document.getElementById('ban-target').value;
+            const reason = document.getElementById('ban-reason').value || 'مخالفة الشروط';
+            
+            bans.push({ target, reason, date: new Date().toISOString().split('T')[0] });
+            renderBans();
+            showToast(`تم حظر ${target} بنجاح!`, 'error');
+            e.target.reset();
+        });
+
+        function unban(idx) {
+            bans.splice(idx, 1);
+            renderBans();
+            showToast('تم إلغاء الحظر');
+        }
+
+        // AI Luau Script Generation Mocking
+        function generateAiScript() {
+            const prompt = document.getElementById('ai-prompt-input').value;
+            if(!prompt) {
+                showToast('يرجى كتابة وصف السكربت أولاً', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('ai-gen-btn');
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> جاري التوليد...`;
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const sampleLuau = `-- Generated by FRX AI Assistant
+-- Request: ${prompt}
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+   Name = "FRX Premium Hub",
+   LoadingTitle = "FRX Protection",
+   LoadingSubtitle = "by FRX Team",
+})
+
+local Tab = Window:CreateTab("Main Features", 4483362458)
+local Button = Tab:CreateButton({
+   Name = "Speed Boost (50)",
+   Callback = function()
+       game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50
+       Rayfield:Notify({ Title = "Success", Content = "Speed set to 50!" })
+   end,
+})`;
+                document.getElementById('ai-code-output').value = sampleLuau;
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> توليد السكربت`;
+                btn.disabled = false;
+                showToast('تم توليد كود Luau بنجاح!');
+            }, 1200);
+        }
+
+        function sendAiCodeToAddScript() {
+            const code = document.getElementById('ai-code-output').value;
+            document.getElementById('script-code').value = code;
+            document.getElementById('script-name').value = "AI Generated Script";
+            switchTab('add-script');
+            showToast('تم نقل الكود إلى صفحة الإضافة');
+        }
+
+        // Utility: Copying
+        function copyToClipboard(elementId) {
+            const input = document.getElementById(elementId);
+            input.select();
+            document.execCommand('copy');
+            showToast('تم النسخ إلى الحافظة بنجاح!');
+        }
+
+        function copyRaw(text) {
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+            showToast('تم نسخ رابط الـ Loadstring!');
+        }
+
+        // Init
+        window.onload = () => {
+            renderScriptsTable();
+            renderBans();
+        };
+    </script>
+</body>
+</html>
