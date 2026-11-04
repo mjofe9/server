@@ -6,101 +6,201 @@
     <title>FRX LUA - Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: #0a0a0c; color: #fff; min-height: 100vh; padding: 25px; display: flex; justify-content: center; }
-        .dashboard { width: 100%; max-width: 900px; }
-        
-        /* الهيدر والعنوان */
-        .header { margin-bottom: 25px; text-align: right; border-bottom: 1px solid #1f1f26; padding-bottom: 15px; }
-        .header h1 { font-size: 26px; color: #fff; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-        .header .badge { background: #ff2a2a; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
-        .header p { color: #888; font-size: 14px; margin-top: 5px; }
+        body { background-color: #08080a; color: #fff; display: flex; min-height: 100vh; overflow-x: hidden; }
 
-        /* الكروت والإحصائيات */
+        /* القائمة الجانبية - Sidebar */
+        .sidebar { width: 250px; background: #0f0f13; border-left: 1px solid #1a1a22; padding: 20px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+        .sidebar-brand { font-size: 22px; font-weight: 900; color: #ff2a2a; margin-bottom: 20px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,42,42,0.4); text-align: center; }
+        .nav-item { padding: 12px 16px; border-radius: 8px; color: #aaa; text-decoration: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover, .nav-item.active { background: #ff2a2a; color: #fff; box-shadow: 0 4px 15px rgba(255,42,42,0.3); }
+
+        /* محتوى اللوحة الرئيسي */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #1a1a22; padding-bottom: 15px; }
+        .header h1 { font-size: 24px; color: #fff; }
+        .header .badge { background: rgba(255,42,42,0.15); color: #ff2a2a; border: 1px solid rgba(255,42,42,0.4); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+        /* الأقسام الصفحات */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* كروت الإحصائيات */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: #121217; border: 1px solid #1f1f26; border-radius: 12px; padding: 20px; text-align: center; position: relative; overflow: hidden; }
-        .stat-card.red-glow { border-color: rgba(255, 42, 42, 0.4); box-shadow: 0 0 15px rgba(255, 42, 42, 0.1); }
-        .stat-card h2 { font-size: 32px; color: #fff; margin-bottom: 5px; }
-        .stat-card p { color: #888; font-size: 13px; }
+        .stat-card { background: #0f0f13; border: 1px solid #1a1a22; border-radius: 12px; padding: 20px; text-align: center; }
+        .stat-card.glow { border-color: rgba(255,42,42,0.5); box-shadow: 0 0 15px rgba(255,42,42,0.15); }
+        .stat-card h2 { font-size: 30px; color: #fff; margin-bottom: 5px; }
+        .stat-card p { color: #777; font-size: 13px; }
 
-        /* اللوحة الحمراء وأزرار التحكم */
-        .action-box { background: #121217; border: 1px solid #1f1f26; border-radius: 12px; padding: 20px; margin-bottom: 25px; }
-        .action-box h3 { color: #fff; font-size: 16px; margin-bottom: 15px; }
-        .inputs-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        input, select { flex: 1; min-width: 180px; background: #0a0a0c; border: 1px solid #2a2a35; padding: 12px; border-radius: 8px; color: #fff; outline: none; }
-        input:focus { border-color: #ff2a2a; }
-        
+        /* الأشكال والنموذج */
+        .box { background: #0f0f13; border: 1px solid #1a1a22; border-radius: 12px; padding: 25px; margin-bottom: 20px; }
+        .box h3 { margin-bottom: 15px; font-size: 16px; color: #ff2a2a; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        label { font-size: 13px; color: #aaa; }
+        input, select, textarea { background: #08080a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
+        input:focus, select:focus, textarea:focus { border-color: #ff2a2a; }
+        textarea { height: 100px; resize: vertical; font-family: monospace; }
+
         .btn-red { background: #ff2a2a; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-red:hover { background: #d61e1e; }
 
-        /* جدول المفاتيح النشطة */
-        .table-container { background: #121217; border: 1px solid #1f1f26; border-radius: 12px; padding: 20px; }
-        .table-container h3 { margin-bottom: 15px; font-size: 16px; color: #fff; }
-        table { width: 100%; border-collapse: collapse; text-align: right; }
-        th, td { padding: 12px 15px; border-bottom: 1px solid #1f1f26; font-size: 14px; }
-        th { color: #666; font-weight: 600; }
+        /* الجداول */
+        table { width: 100%; border-collapse: collapse; text-align: right; margin-top: 10px; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #1a1a22; font-size: 14px; }
+        th { color: #666; font-weight: 600; background: #08080a; }
         td code { color: #ff5555; background: rgba(255,85,85,0.1); padding: 3px 8px; border-radius: 4px; font-family: monospace; }
-        .status-active { color: #00ffcc; font-size: 12px; }
+        .status-on { color: #00ffcc; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
+    <!-- القائمة الجانبية (Sidebar) -->
+    <div class="sidebar">
+        <div class="sidebar-brand">FRX LUA</div>
+        <div class="nav-item active" onclick="showPage('dashboard', this)">Dashboard</div>
+        <div class="nav-item" onclick="showPage('addScript', this)">Add Script</div>
+        <div class="nav-item" onclick="showPage('manageScripts', this)">Manage Scripts</div>
+        <div class="nav-item" onclick="showPage('linkManagement', this)">Link Management</div>
+        <div class="nav-item" onclick="showPage('getKey', this)">Get Key</div>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
         <div class="header">
-            <h1>نظام حماية وإدارة السكربتات المتقدم <span class="badge">FRX PROTECTION LIVE</span></h1>
-            <p>يمكنك من هنا التحكم التام بسكربتات روبلوكس، حمايتها، وإصدار مفاتيح لعملائك.</p>
+            <h1 id="pageTitle">Dashboard</h1>
+            <span class="badge">POLSEC SYSTEM LIVE</span>
         </div>
 
-        <!-- إحصائيات النظام باللون الاحمر -->
-        <div class="stats-grid">
-            <div class="stat-card red-glow">
-                <h2 id="activeKeysCount">0</h2>
-                <p>المفاتيح النشطة</p>
+        <!-- 1. صفحة Dashboard -->
+        <div id="dashboard" class="page active">
+            <div class="stats-grid">
+                <div class="stat-card glow">
+                    <h2 id="activeKeysCount">0</h2>
+                    <p>المفاتيح النشطة</p>
+                </div>
+                <div class="stat-card">
+                    <h2 id="bannedCount">0</h2>
+                    <p>المستخدمين المحظورين</p>
+                </div>
+                <div class="stat-card">
+                    <h2 id="totalReqCount">0</h2>
+                    <p>إجمالي الطلبات</p>
+                </div>
             </div>
-            <div class="stat-card">
-                <h2 id="bannedCount">0</h2>
-                <p>المستخدمين المحظورين</p>
-            </div>
-            <div class="stat-card">
-                <h2 id="totalReqCount">0</h2>
-                <p>مرات التشغيل اليوم</p>
-            </div>
-        </div>
-
-        <!-- زر التوليد والإضافة -->
-        <div class="action-box">
-            <h3>توليد أصدار مفاتيح جديدة</h3>
-            <div class="inputs-row">
-                <input type="text" id="customKey" placeholder="اكتب المفتاح أو اتركه فارغاً للتوليد">
-                <select id="keyDuration">
-                    <option value="Lifetime">دائم (Lifetime)</option>
-                    <option value="7 أيام">7 أيام</option>
-                    <option value="24 ساعة">24 ساعة</option>
-                </select>
-                <button class="btn-red" onclick="generateKey()">+ توليد مفتاح جديد</button>
+            <div class="box">
+                <h3>أحدث الأنشطة</h3>
+                <p style="color:#777; font-size:14px;">السيرفر يعمل بكفاءة ومربوط مع روبلوكس.</p>
             </div>
         </div>
 
-        <!-- قائمة المفاتيح الحقيقية -->
-        <div class="table-container">
-            <h3>قائمة المفاتيح المفعّلة بالسيرفر</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>المفتاح</th>
-                        <th>المدة</th>
-                        <th>الحالة</th>
-                    </tr>
-                </thead>
-                <tbody id="keysTableBody">
-                    <!-- تتعبأ تلقائياً من السيرفر -->
-                </tbody>
-            </table>
+        <!-- 2. صفحة Add Script -->
+        <div id="addScript" class="page">
+            <div class="box">
+                <h3>إضافة سكربت جديد (Add Script)</h3>
+                <div class="form-group">
+                    <label>اسم السكربت (Script Name)</label>
+                    <input type="text" id="scriptName" placeholder="مثال: BlockSpin GUI">
+                </div>
+                <div class="form-group">
+                    <label>الإصدار (Version)</label>
+                    <input type="text" id="scriptVer" value="1.0.0">
+                </div>
+                <div class="form-group">
+                    <label>كود الـ Lua (Lua Code)</label>
+                    <textarea id="scriptCode" placeholder="ضع كود السكربت هنا..."></textarea>
+                </div>
+                <button class="btn-red" onclick="alert('تم حفظ السكربت بنجاح!')">حفظ السكربت</button>
+            </div>
+        </div>
+
+        <!-- 3. صفحة Manage Scripts -->
+        <div id="manageScripts" class="page">
+            <div class="box">
+                <h3>إدارة السكربتات (Manage Scripts)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الإصدار</th>
+                            <th>الحالة</th>
+                            <th>العمليات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>BlockSpin GUI</td>
+                            <td>1.0.0</td>
+                            <td><span class="status-on">● نشط</span></td>
+                            <td><button class="btn-red" style="padding:4px 10px; font-size:12px;">تعديل</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. صفحة Link Management -->
+        <div id="linkManagement" class="page">
+            <div class="box">
+                <h3>إدارة الروابط (Link Management)</h3>
+                <div class="form-group">
+                    <label>اختر السكربت</label>
+                    <select><option>BlockSpin GUI</option></select>
+                </div>
+                <button class="btn-red">إنشاء رابط تحميل (Create Link)</button>
+            </div>
+        </div>
+
+        <!-- 5. صفحة Get Key (توليد المفاتيح) -->
+        <div id="getKey" class="page">
+            <div class="box">
+                <h3>توليد مفتاح جديد (Get Key)</h3>
+                <div class="form-group">
+                    <label>اختر السكربت</label>
+                    <select><option>BlockSpin GUI - FREE</option></select>
+                </div>
+                <div class="form-group">
+                    <label>المدة (Duration)</label>
+                    <select id="keyDuration">
+                        <option value="Lifetime">دائم (Lifetime)</option>
+                        <option value="7 Days">7 أيام</option>
+                        <option value="24 Hours">24 ساعة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>المفتاح المخصص (اختياري)</label>
+                    <input type="text" id="customKey" placeholder="اتركه فارغاً للتوليد التلقائي">
+                </div>
+                <button class="btn-red" onclick="generateKey()">توليد المفتاح (Create Key)</button>
+            </div>
+
+            <div class="box">
+                <h3>قائمة المفاتيح الفعالة</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>المفتاح</th>
+                            <th>المدة</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keysTableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        // جلب المفاتيح والإحصائيات وتحديثها فوراً
-        async function loadData() {
+        // التنقل بين صفحات الـ Sidebar
+        function showPage(pageId, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            element.classList.add('active');
+            document.getElementById('pageTitle').innerText = element.innerText;
+        }
+
+        // جلب البيانات من السيرفر
+        async function loadStats() {
             try {
                 const res = await fetch('/api/stats');
                 const data = await res.json();
@@ -116,16 +216,14 @@
                         <tr>
                             <td><code>${k.key}</code></td>
                             <td>${k.duration}</td>
-                            <td><span class="status-active">● نشط</span></td>
+                            <td><span class="status-on">● نشط</span></td>
                         </tr>
                     `;
                 });
-            } catch (err) {
-                console.error("خطأ الاتصال بالسيرفر:", err);
-            }
+            } catch (e) { console.error(e); }
         }
 
-        // دالة الزر: توليد وإضافة مفتاح جديد
+        // توليد مفتاح
         async function generateKey() {
             let keyInput = document.getElementById('customKey').value.trim();
             if(!keyInput) {
@@ -133,20 +231,18 @@
             }
             const duration = document.getElementById('keyDuration').value;
 
-            const res = await fetch('/api/add-key', {
+            await fetch('/api/add-key', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ key: keyInput, duration: duration })
             });
 
-            if(res.ok) {
-                document.getElementById('customKey').value = '';
-                loadData(); // تحديث القائمة والأرقام فوراً
-            }
+            document.getElementById('customKey').value = '';
+            loadStats();
         }
 
-        loadData();
-        setInterval(loadData, 3000); // تحديث الإحصائيات والمفاتيح كل 3 ثواني
+        loadStats();
+        setInterval(loadStats, 3000);
     </script>
 </body>
 </html>
