@@ -1,87 +1,149 @@
-const express = require('express');
-const path = require('path');
-const app = express();
-const PORT = process.env.PORT || 3000;
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRX LUA - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #0b0b0b;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+        .media-box {
+            width: 100%;
+            max-height: 350px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+        .media-box video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+        p.subtitle {
+            color: #aaa;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: #161616;
+            border: 1px solid #262626;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .stat-card h3 {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        .stat-card span {
+            color: #888;
+            font-size: 13px;
+        }
+        .script-box {
+            background: #111;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed #444;
+            text-align: left;
+            direction: ltr;
+            font-family: monospace;
+            font-size: 13px;
+            color: #00ffcc;
+            user-select: all;
+        }
+    </style>
+</head>
+<body>
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+    <div class="container">
+        <!-- قسم الفيديو والصوت المتحرك -->
+        <div class="media-box">
+            <video autoplay loop muted playsinline>
+                <!-- ضع رابط الفيديو المتحرك المباشر هنا أو استخدم رابط الفيديو المرفق -->
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-anime-girl-with-a-sword-41908-large.mp4" type="video/mp4">
+                متصفحك لا يدعم تشغيل الفيديو.
+            </video>
+        </div>
 
-// عداد إجمالي مرات التشغيل/الطلبات
-let totalRequests = 0;
+        <h1>FRX LUA DASHBOARD</h1>
+        <p class="subtitle">لوحة حماية وإدارة السكربتات المتقدمة</p>
 
-// مصفوفات التخزين للمفاتيح والمحظورين
-let keys = [
-    { key: "FRX-1QR9SA-HTQ7FE", duration: "Lifetime", scriptName: "Main Script", active: true }
-];
-let bannedUsers = [];
-let recentLogs = [
-    { text: "تم تشغيل السيرفر بنجاح", time: "الآن" }
-];
+        <!-- الإحصائيات الحقيقية القادمة من السيرفر -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="activeKeys">--</h3>
+                <span>المفاتيح النشطة</span>
+            </div>
+            <div class="stat-card">
+                <h3 id="bannedUsers">--</h3>
+                <span>المستخدمين المحظورين</span>
+            </div>
+            <div class="stat-card">
+                <h3 id="totalReq">--</h3>
+                <span>إجمالي الطلبات</span>
+            </div>
+        </div>
 
-// قراءة ملف index.html وإظهاره في الصفحة الرئيسية (لوحة التحكم)
-app.get('/', (req, res) => {
-    totalRequests++;
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+        <!-- السكربت الجاهز للاستخدام -->
+        <div class="script-box">
+            _G.Key = "FRX-1QR9SA-HTQ7FE"<br>
+            loadstring(game:HttpGet("https://lost-fire-lua.onrender.com/api/verify?key=" .. _G.Key))()
+        </div>
+    </div>
 
-// API لإرسال الإحصائيات الحقيقية للوحة التحكم
-app.get('/api/stats', (req, res) => {
-    res.json({
-        totalRequests: totalRequests,
-        activeKeysCount: keys.filter(k => k.active).length,
-        bannedCount: bannedUsers.length,
-        logs: recentLogs
-    });
-});
+    <script>
+        // دالة لجلب الإحصائيات الحقيقية من السيرفر وتحديثها تلقائياً
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                document.getElementById('activeKeys').innerText = data.activeKeysCount;
+                document.getElementById('bannedUsers').innerText = data.bannedCount;
+                document.getElementById('totalReq').innerText = data.totalRequests;
+            } catch (e) {
+                console.error("خطأ في جلب البيانات", e);
+            }
+        }
+        
+        fetchStats();
+        setInterval(fetchStats, 5000); // تحديث كل 5 ثواني
+    </script>
 
-// API التحقق من المفتاح - يُرجع كود Lua ينفذه روبلوكس
-app.get('/api/verify', (req, res) => {
-    totalRequests++;
-    const key = req.query.key;
-    const found = keys.find(k => k.key === key && k.active);
-    
-    // ضبط صيغة الاستجابة إلى نص صافي يفهمه loadstring
-    res.setHeader('Content-Type', 'text/plain');
-
-    if (found) {
-        recentLogs.unshift({ text: `تم التحقق من مفتاح بنجاح: ${key}`, time: "منذ قليل" });
-        res.send(`
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "FRX LUA";
-                Text = "تم التحقق من المفتاح بنجاح! أهلاً بك.";
-                Duration = 5;
-            });
-            print("FRX LUA Loaded Successfully!");
-        `);
-    } else {
-        recentLogs.unshift({ text: `محاولة دخول بمفتاح خاطئ أو موقوف`, time: "منذ قليل" });
-        res.status(403).send(`
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "FRX LUA";
-                Text = "المفتاح غير صالح أو غير مفعل!";
-                Duration = 5;
-            });
-            error("Invalid or expired key!");
-        `);
-    }
-});
-
-// API إضافة مفتاح جديد من لوحة التحكم
-app.post('/api/add-key', (req, res) => {
-    const { key, duration, scriptName } = req.body;
-    keys.push({ key, duration, scriptName, active: true });
-    recentLogs.unshift({ text: `تم إضافة مفتاح جديد (${scriptName || 'سكربت'})`, time: "منذ قليل" });
-    res.json({ success: true, message: "Key added successfully!" });
-});
-
-// API حظر مستخدم
-app.post('/api/ban', (req, res) => {
-    const { userId } = req.body;
-    bannedUsers.push(userId);
-    recentLogs.unshift({ text: `تم حظر المستخدم ID: ${userId}`, time: "منذ قليل" });
-    res.json({ success: true, message: "User banned successfully!" });
-});
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+</body>
+</html>
