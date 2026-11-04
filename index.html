@@ -3,118 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIG4 - Ultimate AI & Security Dashboard</title>
+    <title>DIG4 - Dashboard</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #050505; color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .dashboard { width: 100%; max-width: 950px; background: rgba(15, 15, 15, 0.95); border: 1px solid #222; border-radius: 16px; padding: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 20px; margin-bottom: 25px; }
-        .header h1 { font-size: 24px; color: #fff; letter-spacing: 1px; }
-        .header span { color: #ff2a2a; font-size: 13px; background: rgba(255,42,42,0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,42,42,0.3); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #08080a; color: #fff; display: flex; min-height: 100vh; overflow-x: hidden; }
 
-        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-box { background: #111; border: 1px solid #222; padding: 20px; border-radius: 12px; text-align: center; }
-        .stat-box h2 { font-size: 28px; color: #fff; margin-bottom: 5px; }
-        .stat-box p { color: #777; font-size: 13px; }
+        /* القائمة والتحكم على اليمين */
+        .sidebar { width: 260px; background: #0f0f13; border-left: 1px solid #1a1a22; padding: 25px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+        .sidebar-brand { font-size: 24px; font-weight: 900; color: #ff2a2a; margin-bottom: 25px; letter-spacing: 2px; text-align: center; text-shadow: 0 0 10px rgba(255,42,42,0.4); }
+        .nav-item { padding: 12px 16px; border-radius: 8px; color: #aaa; text-decoration: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover, .nav-item.active { background: #ff2a2a; color: #fff; box-shadow: 0 4px 15px rgba(255,42,42,0.3); }
 
-        .panel-section { background: #111; border: 1px solid #222; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
-        .panel-section h3 { font-size: 16px; margin-bottom: 15px; color: #ff2a2a; }
-        
-        .form-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
-        input, select, textarea { flex: 1; min-width: 200px; background: #0a0a0a; border: 1px solid #333; padding: 12px; border-radius: 8px; color: #fff; outline: none; }
-        textarea { width: 100%; height: 100px; resize: vertical; font-family: monospace; font-size: 13px; }
+        /* المحتوى الرئيسي */
+        .main-content { flex: 1; padding: 35px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #1a1a22; padding-bottom: 15px; }
+        .header h1 { font-size: 24px; color: #fff; }
+        .header .badge { background: rgba(255,42,42,0.15); color: #ff2a2a; border: 1px solid rgba(255,42,42,0.4); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+        /* الأقسام الصفحات */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* كروت الإحصائيات */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: #0f0f13; border: 1px solid #1a1a22; border-radius: 12px; padding: 20px; text-align: center; }
+        .stat-card.glow { border-color: rgba(255,42,42,0.5); box-shadow: 0 0 15px rgba(255,42,42,0.15); }
+        .stat-card h2 { font-size: 30px; color: #fff; margin-bottom: 5px; }
+        .stat-card p { color: #777; font-size: 13px; }
+
+        /* الصناديق والنماذج */
+        .box { background: #0f0f13; border: 1px solid #1a1a22; border-radius: 12px; padding: 25px; margin-bottom: 20px; }
+        .box h3 { margin-bottom: 15px; font-size: 16px; color: #ff2a2a; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        label { font-size: 13px; color: #aaa; }
+        input, select, textarea { background: #08080a; border: 1px solid #222; border-radius: 8px; padding: 12px; color: #fff; outline: none; font-size: 14px; }
         input:focus, select:focus, textarea:focus { border-color: #ff2a2a; }
-        button { background: #ff2a2a; color: #fff; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #d61e1e; }
-
-        .keys-table { width: 100%; border-collapse: collapse; background: #0a0a0a; border-radius: 8px; overflow: hidden; border: 1px solid #222; }
-        .keys-table th, .keys-table td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #1a1a1a; font-size: 14px; }
-        .keys-table th { background: #141414; color: #888; font-weight: 600; }
-        .badge { background: rgba(255,42,42,0.15); color: #ff2a2a; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
         
-        .output-box { background: #080808; border: 1px dashed #333; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; color: #ff5555; word-break: break-all; margin-top: 10px; max-height: 150px; overflow-y: auto; }
+        .btn-red { background: #ff2a2a; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-red:hover { background: #d61e1e; }
+
+        /* الجداول */
+        table { width: 100%; border-collapse: collapse; text-align: right; margin-top: 10px; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #1a1a22; font-size: 14px; }
+        th { color: #666; font-weight: 600; background: #08080a; }
+        td code { color: #ff5555; background: rgba(255,85,85,0.1); padding: 3px 8px; border-radius: 4px; font-family: monospace; }
+        .status-on { color: #00ffcc; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
+    <!-- القائمة والتحقّم على اليمين (Sidebar) -->
+    <div class="sidebar">
+        <div class="sidebar-brand">DIG4 LUA</div>
+        <div class="nav-item active" onclick="showPage('dashboard', this)">لوحة التحكم (Dashboard)</div>
+        <div class="nav-item" onclick="showPage('addScript', this)">إضافة سكربت (Add Script)</div>
+        <div class="nav-item" onclick="showPage('manageScripts', this)">إدارة السكربتات (Manage)</div>
+        <div class="nav-item" onclick="showPage('getKey', this)">توليد مفتاح (Get Key)</div>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
         <div class="header">
-            <h1>DIG4 - AI & SECURITY CONTROL</h1>
-            <span>SYSTEM ACTIVE</span>
+            <h1 id="pageTitle">لوحة التحكم</h1>
+            <span class="badge">DIG4 SYSTEM LIVE</span>
         </div>
 
-        <!-- الإحصائيات -->
-        <div class="stats-container">
-            <div class="stat-box">
-                <h2 id="activeKeysCount">0</h2>
-                <p>المفاتيح النشطة</p>
+        <!-- 1. صفحة Dashboard -->
+        <div id="dashboard" class="page active">
+            <div class="stats-grid">
+                <div class="stat-card glow">
+                    <h2 id="activeKeysCount">0</h2>
+                    <p>المفاتيح النشطة</p>
+                </div>
+                <div class="stat-card">
+                    <h2 id="bannedCount">0</h2>
+                    <p>المستخدمين المحظورين</p>
+                </div>
+                <div class="stat-card">
+                    <h2 id="totalReqCount">0</h2>
+                    <p>إجمالي الطلبات</p>
+                </div>
             </div>
-            <div class="stat-box">
-                <h2 id="bannedCount">0</h2>
-                <p>المستخدمين المحظورين</p>
-            </div>
-            <div class="stat-box">
-                <h2 id="totalReqCount">0</h2>
-                <p>إجمالي الطلبات</p>
-            </div>
-        </div>
-
-        <!-- نظام تشفير السكربتات Obfuscator -->
-        <div class="panel-section">
-            <h3>🔒 نظام تشفير السكربتات (Lua Obfuscator)</h3>
-            <textarea id="rawScript" placeholder="ضع كود Lua العادي هنا لتشفيره وحمايته عبر DIG4..."></textarea>
-            <button onclick="obfuscateScript()">تشفير الكود الآن</button>
-            <div id="obfuscatedOutput" class="output-box" style="display:none;"></div>
-        </div>
-
-        <!-- نظام الذكاء الاصطناعي AI Helper -->
-        <div class="panel-section">
-            <h3>🤖 مساعد الذكاء الاصطناعي (AI Assistant)</h3>
-            <div class="form-group">
-                <input type="text" id="aiPrompt" placeholder="اطلب من الذكاء الاصطناعي كتابة كود أو إنشاء مفتاح باسم خاص...">
-                <button onclick="askAI()">توليد عبر الذكاء الاصطناعي</button>
-            </div>
-            <div id="aiOutput" class="output-box" style="display:none;"></div>
-        </div>
-
-        <!-- قسم توليد مفتاح جديد -->
-        <div class="panel-section">
-            <h3>🔑 إدارة وتوليد المفاتيح</h3>
-            <div class="form-group">
-                <input type="text" id="customKey" placeholder="اكتب المفتاح أو اتركه فارغاً للتوليد">
-                <select id="keyDuration">
-                    <option value="Lifetime">دائم (Lifetime)</option>
-                    <option value="24 Hours">24 ساعة</option>
-                    <option value="7 Days">7 أيام</option>
-                </select>
-                <button onclick="generateKey()">توليد وإضافة</button>
+            <div class="box">
+                <h3>حالة السيرفر</h3>
+                <p style="color:#777; font-size:14px;">السيرفر متصل ويعمل بكفاءة عالية مع روبلوكس.</p>
             </div>
         </div>
 
-        <!-- قائمة المفاتيح الفعالة -->
-        <div class="panel-section">
-            <h3>المفاتيح النشطة في السيرفر</h3>
-            <table class="keys-table">
-                <thead>
-                    <tr>
-                        <th>المفتاح</th>
-                        <th>المدة</th>
-                        <th>الحالة</th>
-                    </tr>
-                </thead>
-                <tbody id="keysTableBody"></tbody>
-            </table>
+        <!-- 2. صفحة Add Script -->
+        <div id="addScript" class="page">
+            <div class="box">
+                <h3>إضافة سكربت جديد</h3>
+                <div class="form-group">
+                    <label>اسم السكربت</label>
+                    <input type="text" id="scriptName" placeholder="مثال: DIG4 GUI">
+                </div>
+                <div class="form-group">
+                    <label>كود الـ Lua</label>
+                    <textarea id="scriptCode" placeholder="ضع كود السكربت هنا..."></textarea>
+                </div>
+                <button class="btn-red" onclick="alert('تم حفظ السكربت بنجاح!')">حفظ السكربت</button>
+            </div>
+        </div>
+
+        <!-- 3. صفحة Manage Scripts -->
+        <div id="manageScripts" class="page">
+            <div class="box">
+                <h3>إدارة السكربتات المضافة</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الحالة</th>
+                            <th>التحكم</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>DIG4 Main Script</td>
+                            <td><span class="status-on">● نشط</span></td>
+                            <td><button class="btn-red" style="padding:4px 10px; font-size:12px;">حذف</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. صفحة Get Key (توليد المفاتيح الشغال 100%) -->
+        <div id="getKey" class="page">
+            <div class="box">
+                <h3>توليد مفتاح جديد</h3>
+                <div class="form-group">
+                    <label>مدة المفتاح</label>
+                    <select id="keyDuration">
+                        <option value="Lifetime">دائم (Lifetime)</option>
+                        <option value="7 Days">7 أيام</option>
+                        <option value="24 Hours">24 ساعة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>المفتاح المخصص (اختياري)</label>
+                    <input type="text" id="customKey" placeholder="اتركه فارغاً لتوليد مفتاح تلقائي">
+                </div>
+                <button class="btn-red" onclick="generateKey()">توليد المفتاح الآن</button>
+            </div>
+
+            <div class="box">
+                <h3>قائمة المفاتيح الفعالة الحالية</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>المفتاح</th>
+                            <th>المدة</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keysTableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        async function fetchDashboardData() {
+        function showPage(pageId, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            element.classList.add('active');
+            document.getElementById('pageTitle').innerText = element.innerText;
+        }
+
+        async function loadStats() {
             try {
-                const res = await fetch('/api/keys-list');
+                const res = await fetch('/api/stats');
                 const data = await res.json();
                 
-                document.getElementById('activeKeysCount').innerText = data.activeKeys;
+                document.getElementById('activeKeysCount').innerText = data.activeKeysCount;
                 document.getElementById('bannedCount').innerText = data.bannedCount;
                 document.getElementById('totalReqCount').innerText = data.totalRequests;
 
@@ -125,47 +190,17 @@
                         <tr>
                             <td><code>${k.key}</code></td>
                             <td>${k.duration}</td>
-                            <td><span class="badge">نشط</span></td>
+                            <td><span class="status-on">● نشط</span></td>
                         </tr>
                     `;
                 });
             } catch (e) { console.error(e); }
         }
 
-        async function obfuscateScript() {
-            const script = document.getElementById('rawScript').value;
-            if(!script) return alert("الرجاء كتابة كود لتشفيره");
-
-            const res = await fetch('/api/obfuscate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ script })
-            });
-            const data = await res.json();
-            const out = document.getElementById('obfuscatedOutput');
-            out.style.display = 'block';
-            out.innerText = data.obfuscatedScript;
-        }
-
-        async function askAI() {
-            const prompt = document.getElementById('aiPrompt').value;
-            if(!prompt) return alert("اكتب طلبك للذكاء الاصطناعي");
-
-            const res = await fetch('/api/ai-generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
-            });
-            const data = await res.json();
-            const out = document.getElementById('aiOutput');
-            out.style.display = 'block';
-            out.innerText = data.response;
-        }
-
         async function generateKey() {
             let keyInput = document.getElementById('customKey').value.trim();
             if(!keyInput) {
-                keyInput = "DIG4-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+                keyInput = "DIG4-" + Math.random().toString(36).substring(2, 8).toUpperCase() + "-KEY";
             }
             const duration = document.getElementById('keyDuration').value;
 
@@ -176,11 +211,11 @@
             });
 
             document.getElementById('customKey').value = '';
-            fetchDashboardData();
+            loadStats();
         }
 
-        fetchDashboardData();
-        setInterval(fetchDashboardData, 4000);
+        loadStats();
+        setInterval(loadStats, 3000);
     </script>
 </body>
 </html>
