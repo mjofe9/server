@@ -1,1 +1,239 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOST FIRE - لوحة التحكم</title>
+    <style>
+        body { background: #0a0a0f; color: #fff; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; }
+        .card { background: #151520; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #2a2a35; }
+        input, button, textarea, select { width: 100%; padding: 12px; margin: 8px 0; background: #20202a; border: 1px solid #3a3a45; color: #fff; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #666; }
+        button { background: #fff; color: #000; font-weight: bold; cursor: pointer; transition: 0.2s; border: none; }
+        button:hover { background: #ddd; }
+        .danger { background: #ff3333 !important; color: #fff !important; }
+        .danger:hover { background: #cc0000 !important; }
+        .success { background: #22c55e !important; color: #fff !important; }
+        .success:hover { background: #16a34a !important; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #2a2a35; }
+        th { color: #888; font-weight: normal; }
+        .hidden { display: none !important; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .key-text { font-family: monospace; font-size: 16px; color: #22c55e; font-weight: bold; letter-spacing: 1px; }
+        .status-on { color: #22c55e; }
+        .status-off { color: #ff3333; }
+    </style>
+</head>
+<body>
 
+<!-- شاشة تسجيل الدخول -->
+<div id="login-screen" class="card" style="max-width: 400px; margin: 100px auto;">
+    <h2 style="text-align: center; margin-bottom: 20px;">تسجيل الدخول</h2>
+    <input type="text" id="login-user" placeholder="اسم المستخدم (Owner)" autocomplete="off">
+    <input type="password" id="login-pass" placeholder="كلمة المرور" autocomplete="off">
+    <button onclick="doLogin()">دخول</button>
+    <p id="login-error" style="color: #ff3333; text-align: center; margin-top: 10px; font-size: 14px;"></p>
+</div>
+
+<!-- لوحة التحكم -->
+<div id="dashboard" class="hidden">
+    <div class="flex-between">
+        <h1>لوحة التحكم <span style="font-size: 14px; color: #888; font-weight: normal;">(مرحباً، <span id="my-name"></span> - <span id="my-role"></span>)</span></h1>
+        <button onclick="doLogout()" style="width: auto; padding: 8px 20px;">تسجيل خروج</button>
+    </div>
+
+    <div class="grid">
+        <!-- رفع سكربت -->
+        <div class="card">
+            <h3>إدارة السكربتات</h3>
+            <input type="text" id="s-name" placeholder="اسم السكربت (مثال: rpg)">
+            <textarea id="s-code" rows="6" placeholder="الصق كود السكربت هنا..."></textarea>
+            <button onclick="uploadScript()">رفع / تحديث السكربت</button>
+        </div>
+        
+        <!-- توليد مفتاح -->
+        <div class="card">
+            <h3>توليد مفتاح</h3>
+            <select id="k-script"></select>
+            <input type="number" id="k-hours" placeholder="ينتهي بعد كم ساعة؟ (0 = لا ينتهي)" value="0">
+            <input type="number" id="k-uses" placeholder="عدد الاستخدامات (0 = غير محدود)" value="0">
+            <button onclick="generateKey()">توليد مفتاح جديد</button>
+            <div id="k-result" style="margin-top: 15px; text-align: center;"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>السكربتات المسجلة</h3>
+        <table>
+            <thead><tr><th>الاسم</th><th>النسخة</th><th>الحالة</th><th>التحكم</th></tr></thead>
+            <tbody id="scripts-list"></tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3>المفاتيح</h3>
+        <table>
+            <thead><tr><th>المفتاح</th><th>السكربت</th><th>الاستخدام</th><th>الحالة</th><th>التحكم</th></tr></thead>
+            <tbody id="keys-list"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // ==================== API HELPERS ====================
+    async function api(path, opts = {}) {
+        opts.headers = { ...opts.headers, 'Content-Type': 'application/json' };
+        const res = await fetch(path, opts);
+        if (res.status === 401) { 
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            throw new Error("Unauthorized"); 
+        }
+        return res.json();
+    }
+
+    // ==================== AUTH ====================
+    async function doLogin() {
+        const u = document.getElementById('login-user').value;
+        const p = document.getElementById('login-pass').value;
+        const err = document.getElementById('login-error');
+        err.innerText = "";
+        
+        try {
+            const res = await api('/api/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+            if (res.ok) {
+                loadApp();
+            } else {
+                err.innerText = "بيانات الدخول غير صحيحة";
+            }
+        } catch(e) {
+            err.innerText = "خطأ في الاتصال بالسيرفر";
+        }
+    }
+
+    async function doLogout() {
+        await api('/api/logout', { method: 'POST' });
+        location.reload();
+    }
+
+    // ==================== LOAD APP ====================
+    async function loadApp() {
+        try {
+            const me = await api('/api/me');
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('my-name').innerText = me.username;
+            document.getElementById('my-role').innerText = me.role === 'OWNER' ? 'أونر' : 'مولد مفاتيح';
+            
+            loadScripts();
+            loadKeys();
+        } catch(e) {
+            // Not logged in
+        }
+    }
+
+    // ==================== SCRIPTS ====================
+    async function loadScripts() {
+        const scripts = await api('/api/scripts');
+        const tbody = document.getElementById('scripts-list');
+        const select = document.getElementById('k-script');
+        tbody.innerHTML = ''; select.innerHTML = '';
+        
+        if (scripts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">لا توجد سكربتات</td></tr>';
+            return;
+        }
+
+        scripts.forEach(s => {
+            select.innerHTML += `<option value="${s.name}">${s.name}</option>`;
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${s.name}</strong></td>
+                    <td>v${s.version}</td>
+                    <td class="${s.enabled ? 'status-on' : 'status-off'}">${s.enabled ? 'يعمل' : 'متوقف'}</td>
+                    <td>
+                        <button class="${s.enabled ? 'danger' : 'success'}" style="width: auto; padding: 6px 15px; margin:0;" onclick="toggleScript('${s.name}', ${!s.enabled})">
+                            ${s.enabled ? 'إيقاف نهائي' : 'تشغيل'}
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    async function uploadScript() {
+        const name = document.getElementById('s-name').value.trim();
+        const content = document.getElementById('s-code').value;
+        if (!name || !content) return alert("يجب إدخال اسم السكربت والكود");
+        
+        const btn = event.target;
+        btn.innerText = "... جاري الرفع";
+        await api('/api/scripts/upload', { method: 'POST', body: JSON.stringify({ name, content }) });
+        btn.innerText = "رفع / تحديث السكربت";
+        
+        document.getElementById('s-code').value = '';
+        alert("تم الرفع بنجاح");
+        loadScripts();
+    }
+
+    async function toggleScript(name, enabled) {
+        await api('/api/scripts/toggle', { method: 'POST', body: JSON.stringify({ name, enabled }) });
+        loadScripts();
+    }
+
+    // ==================== KEYS ====================
+    async function loadKeys() {
+        const keys = await api('/api/keys');
+        const tbody = document.getElementById('keys-list');
+        tbody.innerHTML = '';
+        
+        if (keys.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">لا توجد مفاتيح</td></tr>';
+            return;
+        }
+
+        keys.forEach(k => {
+            tbody.innerHTML += `
+                <tr>
+                    <td class="key-text">${k.key}</td>
+                    <td>${k.script_name}</td>
+                    <td>${k.uses} ${k.max_uses > 0 ? '/ ' + k.max_uses : '/ ∞'}</td>
+                    <td class="${k.revoked ? 'status-off' : 'status-on'}">${k.revoked ? 'ملغي' : 'فعال'}</td>
+                    <td>
+                        <button class="${k.revoked ? 'success' : 'danger'}" style="width: auto; padding: 6px 15px; margin:0;" onclick="toggleKey('${k.key}', ${!k.revoked})">
+                            ${k.revoked ? 'تفعيل' : 'إلغاء المفتاح'}
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    async function generateKey() {
+        const script_name = document.getElementById('k-script').value;
+        if (!script_name) return alert("قم برفع سكربت أولاً");
+        
+        const expiresInHours = parseInt(document.getElementById('k-hours').value) || 0;
+        const maxUses = parseInt(document.getElementById('k-uses').value) || 0;
+        
+        const res = await api('/api/keys/generate', { method: 'POST', body: JSON.stringify({ script_name, expiresInHours, maxUses }) });
+        if (res.ok) {
+            document.getElementById('k-result').innerHTML = `
+                <div style="background:#1a2e1a; padding:10px; border-radius:6px; border:1px solid #22c55e;">
+                    المفتاح: <br><span class="key-text">${res.key}</span>
+                </div>`;
+            loadKeys();
+        }
+    }
+
+    async function toggleKey(key, enable) {
+        await api(enable ? '/api/keys/enable' : '/api/keys/revoke', { method: 'POST', body: JSON.stringify({ key }) });
+        loadKeys();
+    }
+
+    // ==================== INIT ====================
+    loadApp();
+</script>
+</body>
+</html>
